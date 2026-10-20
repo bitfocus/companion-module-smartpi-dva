@@ -1,0 +1,28 @@
+{
+	"$schema": "../node_modules/@companion-module/base/assets/manifest.schema.json",
+	"type": "connection",
+	"id": "smartpi-dva",
+	"name": "SmartPi DVA",
+	"shortname": "smartpi-dva",
+	"description": "Companion module for SmartPi DVA",
+	"version": "0.0.0",
+	"license": "MIT",
+	"repository": "git+https://github.com/bitfocus/companion-module-smartpi-dva.git",
+	"bugs": "https://github.com/bitfocus/companion-module-smartpi-dva/issues",
+	"maintainers": [
+		{
+			"name": "Phillip Ivan Pietruschka",
+			"email": "ivanpietruschka@gmail.com"
+		}
+	],
+	"runtime": {
+		"type": "node26",
+		"api": "nodejs-ipc",
+		"apiVersion": "0.0.0",
+		"entrypoint": "../dist/main.js"
+	},
+	"legacyIds": [],
+	"manufacturer": "SmartPi",
+	"products": ["DVA"],
+	"keywords": []
+}

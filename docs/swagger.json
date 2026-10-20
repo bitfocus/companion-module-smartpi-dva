@@ -1,0 +1,685 @@
+{
+	"openapi": "3.0.1",
+	"info": {
+		"title": "DVA API",
+		"version": "3.0.11"
+	},
+	"paths": {
+		"/api/status": {
+			"get": {
+				"summary": "Gets status of current GtfsNode",
+				"responses": {
+					"200": {
+						"description": "OK"
+					},
+					"401": {
+						"description": "Missing or invalid API key (when the API key is enabled)"
+					}
+				},
+				"security": [
+					{
+						"ApiKey": []
+					}
+				]
+			}
+		},
+		"/api/status/all": {
+			"get": {
+				"summary": "Gets status of all nodes",
+				"responses": {
+					"200": {
+						"description": "OK"
+					},
+					"500": {
+						"description": "Internal Server Error"
+					},
+					"401": {
+						"description": "Missing or invalid API key (when the API key is enabled)"
+					}
+				},
+				"security": [
+					{
+						"ApiKey": []
+					}
+				]
+			}
+		},
+		"/api/announcements": {
+			"get": {
+				"summary": "Lists saved announcements (library items) on this Node",
+				"security": [
+					{
+						"ApiKey": []
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/AnnouncementDto"
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Missing or invalid API key (when the API key is enabled)"
+					},
+					"500": {
+						"description": "Internal Server Error"
+					}
+				}
+			}
+		},
+		"/api/destinations": {
+			"get": {
+				"summary": "Lists destinations that can be queued to (active, on a configured output channel)",
+				"security": [
+					{
+						"ApiKey": []
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/DestinationDto"
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Missing or invalid API key (when the API key is enabled)"
+					},
+					"500": {
+						"description": "Internal Server Error"
+					}
+				}
+			}
+		},
+		"/api/queue": {
+			"get": {
+				"summary": "Gets the current play queue (waiting and playing items) on all output channels",
+				"security": [
+					{
+						"ApiKey": []
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/QueueEntryDto"
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Missing or invalid API key (when the API key is enabled)"
+					},
+					"500": {
+						"description": "Internal Server Error"
+					}
+				}
+			},
+			"post": {
+				"summary": "Adds a saved announcement to the play queue on destinations, groups, regions, areas or all destinations",
+				"description": "Same as the dashboard Add to Queue: same queue, so priority, expiry (queue timeout) and EYE Mode On/Off apply. Targets are combined and de-duplicated by destination id; at least one target is required. priority is optional and defaults to the announcement's priority; an override applies to this request only.",
+				"security": [
+					{
+						"ApiKey": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/QueueRequest"
+							},
+							"examples": {
+								"group": {
+									"summary": "One group (zone button)",
+									"value": {
+										"announcementId": 12,
+										"groupIds": [2]
+									}
+								},
+								"destinations": {
+									"summary": "Individual destinations",
+									"value": {
+										"announcementId": 12,
+										"destinationIds": [1, 3]
+									}
+								},
+								"mixed": {
+									"summary": "Groups plus a destination, with priority override",
+									"value": {
+										"announcementId": 12,
+										"groupIds": [2, 4],
+										"destinationIds": [7],
+										"priority": 95
+									}
+								},
+								"regionArea": {
+									"summary": "Region and area (Dynamic popup)",
+									"value": {
+										"announcementId": 12,
+										"regionIds": [1],
+										"areaIds": [3]
+									}
+								},
+								"all": {
+									"summary": "All destinations",
+									"value": {
+										"announcementId": 12,
+										"allDestinations": true
+									}
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Queued",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/QueueResponse"
+								},
+								"example": {
+									"status": "Queued",
+									"announcementId": 12,
+									"announcementName": "Platform change",
+									"priority": 50,
+									"expiry": 300,
+									"items": [
+										{
+											"destinationId": 1,
+											"destinationName": "Platform 1",
+											"outputChannel": 1,
+											"queuedTime": "2026-10-20T16:50:00+11:00"
+										},
+										{
+											"destinationId": 3,
+											"destinationName": "Concourse",
+											"outputChannel": 3,
+											"queuedTime": "2026-10-20T16:50:00+11:00"
+										}
+									],
+									"skipped": [
+										{
+											"destinationId": 4,
+											"destinationName": "Platform 4",
+											"outputChannel": 4,
+											"reason": "Not active or not on a configured output channel (from group 2)."
+										}
+									]
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad request (no announcementId, no target, priority out of range, a destinationId that is inactive / not on a configured output channel, or the selection resolves to no active destinations)",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Missing or invalid API key (when the API key is enabled)"
+					},
+					"404": {
+						"description": "Announcement, destination, group, region or area id not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponse"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error"
+					}
+				}
+			}
+		},
+		"/api/groups": {
+			"get": {
+				"summary": "Lists groups (dashboard \"My Groups\" zone buttons) with member destinations",
+				"security": [
+					{
+						"ApiKey": []
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/GroupDto"
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Missing or invalid API key (when the API key is enabled)"
+					},
+					"500": {
+						"description": "Internal Server Error"
+					}
+				}
+			}
+		},
+		"/api/regions": {
+			"get": {
+				"summary": "Lists regions (Dynamic popup) with their areas and member destinations",
+				"security": [
+					{
+						"ApiKey": []
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/RegionDto"
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Missing or invalid API key (when the API key is enabled)"
+					},
+					"500": {
+						"description": "Internal Server Error"
+					}
+				}
+			}
+		},
+		"/api/areas": {
+			"get": {
+				"summary": "Lists areas (Dynamic popup) with member destinations",
+				"security": [
+					{
+						"ApiKey": []
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/AreaDto"
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Missing or invalid API key (when the API key is enabled)"
+					},
+					"500": {
+						"description": "Internal Server Error"
+					}
+				}
+			}
+		}
+	},
+	"components": {
+		"schemas": {
+			"NodeDto": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "integer"
+					},
+					"nodeName": {
+						"type": "string"
+					},
+					"nodeDesc": {
+						"type": "string"
+					},
+					"onlineStatus": {
+						"type": "string"
+					},
+					"loggedOnUser": {
+						"type": "string"
+					},
+					"lastUpdateTs": {
+						"type": "integer"
+					},
+					"cpuLoad": {
+						"type": "number",
+						"format": "float"
+					}
+				}
+			},
+			"AnnouncementDto": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "integer"
+					},
+					"name": {
+						"type": "string"
+					},
+					"description": {
+						"type": "string",
+						"nullable": true
+					},
+					"priority": {
+						"type": "integer"
+					},
+					"expiry": {
+						"type": "integer",
+						"nullable": true,
+						"description": "Queue timeout in seconds"
+					},
+					"type": {
+						"type": "string",
+						"nullable": true
+					}
+				}
+			},
+			"DestinationDto": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "integer"
+					},
+					"name": {
+						"type": "string"
+					},
+					"outputChannel": {
+						"type": "integer"
+					}
+				}
+			},
+			"QueueRequest": {
+				"type": "object",
+				"required": ["announcementId"],
+				"description": "Give at least one target. All targets are combined and de-duplicated by destination id.",
+				"properties": {
+					"announcementId": {
+						"type": "integer"
+					},
+					"destinationIds": {
+						"type": "array",
+						"items": {
+							"type": "integer"
+						},
+						"description": "Individual destinations (Dynamic popup). Unknown id = 404, inactive or unconfigured channel = 400."
+					},
+					"groupIds": {
+						"type": "array",
+						"items": {
+							"type": "integer"
+						},
+						"description": "\"My Groups\" zone buttons. Inactive or unconfigured members are skipped (listed in skipped), like the dashboard."
+					},
+					"regionIds": {
+						"type": "array",
+						"items": {
+							"type": "integer"
+						},
+						"description": "Dynamic popup regions. Inactive or unconfigured members are skipped."
+					},
+					"areaIds": {
+						"type": "array",
+						"items": {
+							"type": "integer"
+						},
+						"description": "Dynamic popup areas. Inactive or unconfigured members are skipped."
+					},
+					"allDestinations": {
+						"type": "boolean",
+						"default": false,
+						"description": "Every active destination on a configured output channel (Dynamic popup Select All)."
+					},
+					"priority": {
+						"type": "integer",
+						"minimum": 1,
+						"maximum": 100,
+						"nullable": true,
+						"description": "Optional override for this request only; defaults to the announcement's priority."
+					}
+				},
+				"example": {
+					"announcementId": 12,
+					"groupIds": [2],
+					"destinationIds": [5]
+				}
+			},
+			"QueuedItemDto": {
+				"type": "object",
+				"properties": {
+					"destinationId": {
+						"type": "integer"
+					},
+					"destinationName": {
+						"type": "string"
+					},
+					"outputChannel": {
+						"type": "integer"
+					},
+					"queuedTime": {
+						"type": "string",
+						"format": "date-time"
+					}
+				}
+			},
+			"QueueResponse": {
+				"type": "object",
+				"properties": {
+					"status": {
+						"type": "string",
+						"example": "Queued"
+					},
+					"announcementId": {
+						"type": "integer"
+					},
+					"announcementName": {
+						"type": "string"
+					},
+					"priority": {
+						"type": "integer"
+					},
+					"expiry": {
+						"type": "integer",
+						"nullable": true
+					},
+					"items": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/QueuedItemDto"
+						}
+					},
+					"skipped": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/SkippedDestinationDto"
+						}
+					}
+				}
+			},
+			"QueueEntryDto": {
+				"type": "object",
+				"properties": {
+					"outputChannel": {
+						"type": "integer"
+					},
+					"destinationName": {
+						"type": "string"
+					},
+					"announcementId": {
+						"type": "integer"
+					},
+					"announcementName": {
+						"type": "string"
+					},
+					"priority": {
+						"type": "integer"
+					},
+					"status": {
+						"type": "string",
+						"enum": ["Waiting", "Played", "Playing", "Paused", "Expired"]
+					},
+					"queuedTime": {
+						"type": "string",
+						"format": "date-time"
+					}
+				}
+			},
+			"ErrorResponse": {
+				"type": "object",
+				"properties": {
+					"error": {
+						"type": "string"
+					}
+				}
+			},
+			"DestinationMemberDto": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "integer"
+					},
+					"name": {
+						"type": "string"
+					},
+					"outputChannel": {
+						"type": "integer"
+					},
+					"queueable": {
+						"type": "boolean",
+						"description": "Active and on a configured output channel. Members that are not queueable are skipped when the group/region/area is queued."
+					}
+				}
+			},
+			"GroupDto": {
+				"type": "object",
+				"description": "A dashboard \"My Groups\" zone button",
+				"properties": {
+					"id": {
+						"type": "integer"
+					},
+					"name": {
+						"type": "string"
+					},
+					"color": {
+						"type": "string",
+						"nullable": true
+					},
+					"pos": {
+						"type": "integer"
+					},
+					"destinations": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/DestinationMemberDto"
+						}
+					}
+				}
+			},
+			"RegionDto": {
+				"type": "object",
+				"description": "Dynamic popup region (direct destinations plus its areas' destinations)",
+				"properties": {
+					"id": {
+						"type": "integer"
+					},
+					"name": {
+						"type": "string"
+					},
+					"areaIds": {
+						"type": "array",
+						"items": {
+							"type": "integer"
+						}
+					},
+					"destinations": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/DestinationMemberDto"
+						}
+					}
+				}
+			},
+			"AreaDto": {
+				"type": "object",
+				"description": "Dynamic popup area",
+				"properties": {
+					"id": {
+						"type": "integer"
+					},
+					"name": {
+						"type": "string"
+					},
+					"destinations": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/DestinationMemberDto"
+						}
+					}
+				}
+			},
+			"SkippedDestinationDto": {
+				"type": "object",
+				"properties": {
+					"destinationId": {
+						"type": "integer"
+					},
+					"destinationName": {
+						"type": "string"
+					},
+					"outputChannel": {
+						"type": "integer"
+					},
+					"reason": {
+						"type": "string"
+					}
+				}
+			}
+		},
+		"securitySchemes": {
+			"ApiKey": {
+				"type": "apiKey",
+				"in": "header",
+				"name": "x-api-key",
+				"description": "Remote API key (only checked when the Remote API key is enabled on the Node)"
+			}
+		}
+	}
+}
