@@ -7,7 +7,7 @@ Queues saved announcements on a SmartPi DVA Node through its Remote API, and rep
 | Field                      | Use                                                                                      |
 | -------------------------- | ---------------------------------------------------------------------------------------- |
 | Host                       | Address of the DVA Node                                                                  |
-| Protocol                   | HTTP or HTTPS, as the Node serves its Remote API                                         |
+| Protocol                   | HTTP or HTTPS                                                                            |
 | Allow Insecure Connections | HTTPS only. Accepts a self-signed or otherwise untrusted certificate                     |
 | Use X-API-Key / X-API-Key  | Only needed when the Remote API key is enabled on the Node                               |
 | Update Interval (S)        | How often, in seconds, the announcement and group lists and the variables are read again |
@@ -20,11 +20,7 @@ New announcements and groups appear in the action's lists after the next update.
 | ------------ | ----------------------------------------------- |
 | Add to Queue | Announcement, and one or more Groups to play on |
 
-Add to Queue does what the dashboard's Add to Queue does, on the same queue, so the announcement's priority and expiry apply. A group member that is inactive or not on a configured output channel is skipped, and the module log says which and why.
-
 ### Variables
-
-`smartpi-dva` below is the connection's label. Use your own if you have changed it.
 
 | Variable                 | Value                                  |
 | ------------------------ | -------------------------------------- |
