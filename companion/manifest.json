@@ -2,9 +2,9 @@
 	"$schema": "../node_modules/@companion-module/base/assets/manifest.schema.json",
 	"type": "connection",
 	"id": "smartpi-dva",
-	"name": "SmartPi DVA",
-	"shortname": "smartpi-dva",
-	"description": "Companion module for SmartPi DVA",
+	"name": "Smart pi DVA",
+	"shortname": "DVA",
+	"description": "Companion module for Smart pi DVA",
 	"version": "0.0.0",
 	"license": "MIT",
 	"repository": "git+https://github.com/bitfocus/companion-module-smartpi-dva.git",
@@ -22,7 +22,7 @@
 		"entrypoint": "../dist/main.js"
 	},
 	"legacyIds": [],
-	"manufacturer": "SmartPi",
+	"manufacturer": "Smart pi",
 	"products": ["DVA"],
 	"keywords": []
 }
